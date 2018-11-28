@@ -35,7 +35,7 @@ the offline tests. You will find the test output in the current directory as `te
 
 On my machine, the last lines of the log file read:
 
-    ============= 66 failed, 75 passed, 521 skipped in 436.04 seconds ==============
+    ============= 64 failed, 77 passed, 520 skipped in 471.68 seconds ==============
     Makefile:147: recipe for target 'test_offline' failed
 
 So expect the actual test to run about for 7 to 8 minutes. You could also run the tests on an older
