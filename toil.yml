@@ -1,0 +1,54 @@
+---
+- name: Upgrade packages and install dependencies
+  hosts: all
+  become: yes
+  vars:
+    python: "python3"
+    virtualenv_dir: "/tmp/env"
+  tasks:
+    - name: update package list and upgrade installed packages
+      apt:
+        update_cache: yes
+        upgrade: dist
+        cache_valid_time: 3600
+    - name: install necessary packages for toil
+      apt:
+        name:
+        - "{{ python }}"
+        - "{{ python }}-dev"
+        - "{{ python }}-virtualenv"
+        - "{{ python }}-pip"
+        state: latest
+    - name: create virtualenv
+      shell: "{{ python }} -m virtualenv -p {{ python }} {{ virtualenv_dir }}"
+      args:
+        creates: "{{ virtualenv_dir }}"
+    - name: install python packages from PyPI
+      pip:
+        name:
+        - google-cloud-storage
+        - pytest==3.7.4
+        executable: "{{ virtualenv_dir }}/bin/pip"
+    - name: install toil using setup.py
+      shell: "{{ virtualenv_dir }}/bin/python setup.py install"
+      args:
+        chdir: "/vagrant/toil"
+    - name: install test dependencies
+      shell: "source {{ virtualenv_dir }}/bin/activate && make prepare"
+      args:
+        chdir: "/vagrant/toil"
+        executable: /bin/bash
+
+
+- name: Run toil tests
+  hosts: all
+  become: yes
+  vars:
+    python: "python3"
+    virtualenv_dir: "/tmp/env"
+  tasks:
+    - name: run offline tests
+      shell: "source {{ virtualenv_dir }}/bin/activate && export TOIL_TEST_QUICK=True; make test_offline >/vagrant/test_offline.log"
+      args:
+        chdir: "/vagrant/toil"
+        executable: /bin/bash
